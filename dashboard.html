@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <title>🏆 現場即時戰況 🏆</title>
   <style>
-    /* 全局設定：強制畫面高度為 100% 視窗大小，隱藏所有捲動軸 */
     * { box-sizing: border-box; }
     body { 
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -12,87 +11,88 @@
       color: #fff; 
       margin: 0; 
       padding: 1.5vh 2vw; 
-      height: 100vh; /* 螢幕 100% 高度 */
-      overflow: hidden; /* 隱藏捲動軸 */
+      height: 100vh; 
+      overflow: hidden; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
     }
     
-    /* 標題與資訊區 (高度動態縮放) */
-    h1 { color: #fbbc05; font-size: 4.5vh; margin: 0 0 1vh 0; text-shadow: 0 0 15px rgba(251, 188, 5, 0.5); }
+    h1 { color: #fbbc05; font-size: 3.5vh; margin: 0 0 1vh 0; text-shadow: 0 0 15px rgba(251, 188, 5, 0.5); }
     
     .info-board { 
       background: rgba(255, 255, 255, 0.1); 
       padding: 1vh 3vw; 
       border-radius: 50px; 
-      margin-bottom: 2vh; 
+      margin-bottom: 1.5vh; 
       text-align: center; 
       border: 1px solid rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(5px);
     }
-    .info-board span { font-size: 2.2vh; color: #4285f4; font-weight: bold; }
+    .info-board span { font-size: 1.8vh; color: #4285f4; font-weight: bold; }
 
-    /* === 前三名專區 (自動佔滿剩餘空間) === */
+    /* === 前三名專區 === */
     .top3-container { 
-      flex: 1; /* 關鍵：自動撐開剩餘的高度 */
+      flex: 1; 
       width: 100%;
       display: flex; 
       justify-content: center; 
       align-items: flex-end; 
-      gap: 3vw; 
-      margin-bottom: 2vh; 
+      gap: 2vw; 
+      margin-bottom: 1.5vh; 
     }
     
     .card { 
       background: #222; 
-      border-radius: 15px; 
-      padding: 1.5vh; 
+      border-radius: 12px; 
+      padding: 1.2vh; 
       text-align: center; 
       position: relative;
       transition: transform 0.3s;
     }
-    .card h3 { margin: 1.5vh 0 0.5vh 0; font-size: 2.2vh; }
-    .card .votes { font-size: 3.5vh; font-weight: bold; margin-top: 0.5vh; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-    .medal-icon { font-size: 5vh; position: absolute; top: -3vh; left: -2vw; z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
+    .card h3 { margin: 1vh 0 0.5vh 0; font-size: 1.8vh; }
+    .card .votes { font-size: 2.8vh; font-weight: bold; margin-top: 0.5vh; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .medal-icon { font-size: 4vh; position: absolute; top: -2vh; left: -1.5vw; z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
 
-    /* 金銀銅卡片比例 */
+    /* 金牌 */
     .card.gold { 
-      width: 25vw; max-width: 300px;
+      width: 22vw; max-width: 260px; /* 變窄 */
       border: 4px solid #FFD700; 
-      box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 215, 0, 0.2); 
-      transform: translateY(-2vh); /* 第一名稍微浮高 */
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.2); 
+      transform: translateY(-2vh); 
       background: linear-gradient(145deg, #3a2e00, #222);
     }
-    .card.gold img { height: 35vh; width: 100%; object-fit: cover; border-radius: 8px; }
+    .card.gold img { height: 28vh; width: 100%; object-fit: cover; border-radius: 6px; } /* 圖片變矮 */
     .card.gold .votes { color: #FFD700; }
 
+    /* 銀牌 */
     .card.silver { 
-      width: 20vw; max-width: 250px;
-      border: 4px solid #E0E0E0; 
-      box-shadow: 0 0 20px rgba(224, 224, 224, 0.4); 
+      width: 18vw; max-width: 220px;
+      border: 3px solid #E0E0E0; 
+      box-shadow: 0 0 15px rgba(224, 224, 224, 0.3); 
       background: linear-gradient(145deg, #2a2a2a, #222);
     }
-    .card.silver img { height: 26vh; width: 100%; object-fit: cover; border-radius: 8px; }
+    .card.silver img { height: 22vh; width: 100%; object-fit: cover; border-radius: 6px; }
     .card.silver .votes { color: #E0E0E0; }
 
+    /* 銅牌 */
     .card.bronze { 
-      width: 20vw; max-width: 250px;
-      border: 4px solid #CD7F32; 
-      box-shadow: 0 0 20px rgba(205, 127, 50, 0.4);
+      width: 18vw; max-width: 220px;
+      border: 3px solid #CD7F32; 
+      box-shadow: 0 0 15px rgba(205, 127, 50, 0.3);
       background: linear-gradient(145deg, #332010, #222);
     }
-    .card.bronze img { height: 26vh; width: 100%; object-fit: cover; border-radius: 8px; }
+    .card.bronze img { height: 22vh; width: 100%; object-fit: cover; border-radius: 6px; }
     .card.bronze .votes { color: #CD7F32; }
 
-    /* === 下排其餘名次 (幻燈片跑馬燈固定高度) === */
+    /* === 下排其餘名次 === */
     .slider-wrapper {
-      height: 23vh; /* 固定佔螢幕的 23% 高度 */
+      height: 18vh; /* 跑馬燈整體變矮 */
       width: 100vw;
       overflow: hidden;
       padding: 1vh 0;
       position: relative;
-      flex-shrink: 0; /* 防止被擠壓 */
+      flex-shrink: 0; 
     }
     .slider-wrapper::before, .slider-wrapper::after {
       content: ""; position: absolute; top: 0; width: 5vw; height: 100%; z-index: 2;
@@ -101,8 +101,8 @@
     .slider-wrapper::after { right: 0; background: linear-gradient(to left, #111, transparent); }
 
     .marquee-track {
-      display: flex; gap: 1.5vw; width: max-content;
-      animation: scroll 30s linear infinite; 
+      display: flex; gap: 1.2vw; width: max-content;
+      animation: scroll 35s linear infinite; /* 放慢一點點輪播速度 */
     }
     .marquee-track:hover { animation-play-state: paused; }
 
@@ -112,15 +112,15 @@
     }
 
     .small-card { 
-      background: #333; border-radius: 10px; padding: 1vh; 
-      width: 12vw; min-width: 140px; text-align: center; border: 1px solid #555; position: relative;
+      background: #333; border-radius: 8px; padding: 0.8vh; 
+      width: 11vw; min-width: 130px; text-align: center; border: 1px solid #555; position: relative;
     }
-    .small-card img { width: 100%; height: 12vh; object-fit: cover; border-radius: 5px; }
-    .small-card h4 { margin: 1vh 0 0.5vh 0; font-size: 1.8vh; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .small-card .votes { font-size: 2.2vh; color: #4285f4; font-weight: bold; }
-    .rank-badge { position: absolute; top: -1vh; left: -1vh; background: #666; color: white; width: 3.5vh; height: 3.5vh; border-radius: 50%; font-weight: bold; font-size: 1.8vh; line-height: 3.5vh; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+    .small-card img { width: 100%; height: 9.5vh; object-fit: cover; border-radius: 4px; }
+    .small-card h4 { margin: 0.8vh 0 0.5vh 0; font-size: 1.5vh; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .small-card .votes { font-size: 1.8vh; color: #4285f4; font-weight: bold; }
+    .rank-badge { position: absolute; top: -0.8vh; left: -0.8vh; background: #666; color: white; width: 3vh; height: 3vh; border-radius: 50%; font-weight: bold; font-size: 1.5vh; line-height: 3vh; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
 
-    .update-time { position: fixed; bottom: 1vh; right: 2vw; color: #666; font-size: 1.5vh; z-index: 10; }
+    .update-time { position: fixed; bottom: 0.5vh; right: 2vw; color: #666; font-size: 1.2vh; z-index: 10; }
   </style>
 </head>
 <body>
@@ -130,12 +130,10 @@
     <span>🔥 掃描海報旁 QR Code，投下您神聖的一票！每人最多 3 票 🔥</span>
   </div>
 
-  <!-- 前三名專區 -->
   <div class="top3-container" id="top3Board">
     <h2 style="color: #888;">戰況載入中...</h2>
   </div>
 
-  <!-- 第四名之後的跑馬燈專區 -->
   <div class="slider-wrapper" id="sliderWrapper" style="display: none;">
     <div class="marquee-track" id="othersBoard"></div>
   </div>
