@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>現場即時戰況與活動資訊</title>
+  <style>
+    body { font-family: sans-serif; background: #1a1a1a; color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+    h1 { color: #fbbc05; font-size: 2.5em; margin-bottom: 10px; }
+    .info-board { background: #333; padding: 15px 30px; border-radius: 8px; margin-bottom: 30px; text-align: center; font-size: 1.2em; border: 1px solid #555; }
+    
+    .leaderboard { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; max-width: 1200px; }
+    .card { background: #222; border-radius: 10px; padding: 15px; width: 250px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); position: relative; border: 2px solid #444; }
+    
+    /* 前三名特別樣式 */
+    .card:nth-child(1) { border-color: #ffd700; transform: scale(1.1); margin: 0 15px; } /* 金 */
+    .card:nth-child(2) { border-color: #c0c0c0; } /* 銀 */
+    .card:nth-child(3) { border-color: #cd7f32; } /* 銅 */
+    
+    .rank-badge { position: absolute; top: -15px; left: -15px; background: #ea4335; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2em; font-weight: bold; line-height: 40px; }
+    .card img { width: 100%; height: 300px; object-fit: cover; border-radius: 5px; margin-bottom: 10px; }
+    .votes { font-size: 1.8em; color: #34a853; font-weight: bold; margin-top: 10px; }
+    .update-time { position: fixed; bottom: 10px; right: 20px; color: #888; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+
+  <h1> 最佳人氣海報戰況 </h1>
+  
+  <!-- 活動資訊區塊 -->
+  <div class="info-board">
+    <p>歡迎來到展場！請使用手機掃描各海報旁的 QR Code 進行投票。</p>
+    <p style="color: #4285f4; font-weight: bold;">每人有 3 票，快為您最喜歡的作品應援！</p>
+  </div>
+
+  <div class="leaderboard" id="board">
+    <h2>戰況載入中...</h2>
+  </div>
+
+  <div class="update-time" id="lastUpdate"></div>
+
+  <script>
+    // ★★★ 貼上您原本的 GAS 網址 ★★★
+    const API_URL = "https://script.google.com/macros/s/AKfycbynxfHFYTm-o7tthRcKJ-FbuUyWMDWrUg3necNfFgZl9j8z_IOPf-zlqucYhcNobkCmpg/exec";
+
+    function fetchLiveStats() {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+          // 將海報依照票數由高到低排序
+          let sortedPosters = data.posters.sort((a, b) => b.votes - a.votes);
+          
+          let html = '';
+          sortedPosters.forEach((poster, index) => {
+            html += `
+              <div class="card">
+                <div class="rank-badge">${index + 1}</div>
+                <img src="${poster.imageUrl}" alt="${poster.title}">
+                <h3>${poster.title}</h3>
+                <div class="votes">${poster.votes} 票</div>
+              </div>
+            `;
+          });
+          
+          document.getElementById('board').innerHTML = html;
+          
+          // 更新最後抓取時間
+          let now = new Date();
+          document.getElementById('lastUpdate').innerText = `最後更新時間：${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        })
+        .catch(err => console.error("抓取失敗", err));
+    }
+
+    // 網頁開啟時先抓取一次
+    fetchLiveStats();
+
+    // 設定定時器：每 50,00 毫秒 (5 秒) 自動在背景重新抓取一次資料
+    setInterval(fetchLiveStats, 5000);
+  </script>
+</body>
+</html>
