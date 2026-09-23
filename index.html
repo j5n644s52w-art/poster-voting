@@ -6,23 +6,34 @@
   <title>海報人氣投票系統</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    body { font-family: sans-serif; max-width: 1000px; margin: 20px auto; padding: 0 15px; background: #f9f9f9; overflow-x: hidden; }
+    body { font-family: sans-serif; max-width: 1000px; margin: 20px auto; padding: 0; background: #f9f9f9; overflow-x: hidden; padding-bottom: 80px; }
     h1 { text-align: center; }
-    .marquee-container { position: relative; width: 100%; overflow: hidden; padding: 20px 0; white-space: nowrap; }
-    .marquee-track { display: inline-flex; gap: 20px; animation: scrollLeft 35s linear infinite; }
-    .marquee-container:hover .marquee-track { animation-play-state: paused; }
-    @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-    .poster-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; width: 220px; flex-shrink: 0; display: inline-block; white-space: normal; }
-    .poster-card img { width: 100%; height: 260px; object-fit: cover; border-radius: 4px; }
+    
+    /* 改為手動水平滑動 */
+    .marquee-container { width: 100%; overflow-x: auto; padding: 20px 0; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+    .marquee-container::-webkit-scrollbar { height: 8px; }
+    .marquee-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+    .marquee-track { display: inline-flex; gap: 20px; padding: 0 20px; }
+    
+    /* 卡片設計與互動反饋 */
+    .poster-card { background: #fff; border: 3px solid transparent; border-radius: 8px; padding: 15px; text-align: center; width: 220px; flex-shrink: 0; display: inline-block; white-space: normal; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .poster-card img { width: 100%; height: 260px; object-fit: cover; border-radius: 4px; pointer-events: none; }
+    
+    /* 選取狀態 (藍框 + 放大) */
+    .poster-card.selected { border-color: #4285f4; transform: scale(1.05); box-shadow: 0 6px 15px rgba(66, 133, 244, 0.3); }
+    
+    /* 已投過狀態 (灰底綠框 + 鎖定) */
+    .poster-card.voted { border-color: #34a853; background-color: #f0fdf4; cursor: not-allowed; opacity: 0.9; }
+    .poster-card.voted::after { content: '✓ 已經投過這張'; color: #34a853; font-weight: bold; display: block; margin-top: 10px; font-size: 14px; }
+    
     .footer-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; border-top: 1px solid #ccc; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-sizing: border-box;}
-    button { background: #4285f4; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+    button { background: #4285f4; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; }
     button:disabled { background: #ccc; cursor: not-allowed; }
     #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
   </style>
 </head>
 <body>
 
-  <!-- Google 登入覆蓋層 -->
   <div id="loginOverlay">
     <h2>請先登入 Google 帳號以進行投票</h2>
     <div id="g_id_onload"
@@ -39,28 +50,27 @@
 
   <div class="footer-bar">
     <div class="footer-left">
-      <span id="selectionCount" style="margin-right: 15px; font-weight: bold;">已選擇：0 / 3 票</span>
+      <span id="selectionCount" style="margin-right: 15px; font-weight: bold;">已投票：0 / 3 票</span>
       <button id="submitBtn" onclick="submitVote()" disabled>送出投票</button>
     </div>
     <div class="footer-right" id="userInfo" style="font-size: 13px; color: #666;">尚未登入</div>
   </div>
 
   <script>
-    // ★★★ 將這裡的網址替換為您 GAS 部署後的網頁應用程式網址 ★★★
+    // ★★★ 貼上您 GAS 新部署的網址 ★★★
     const API_URL = "https://script.google.com/macros/s/AKfycbynxfHFYTm-o7tthRcKJ-FbuUyWMDWrUg3necNfFgZl9j8z_IOPf-zlqucYhcNobkCmpg/exec";
     
     let userEmail = "";
     let allPosters = [];
-    let hasVoted = false;
+    let userVotes = [];
+    let currentSelection = null; // 紀錄目前點選的海報 ID
 
-    // Google 登入成功後的回呼函式
     function handleCredentialResponse(response) {
-      const data = JSON.parse(atob(response.credential.split('.')[1])); // 解析 JWT 取得信箱
+      const data = JSON.parse(atob(response.credential.split('.')[1]));
       userEmail = data.email;
       document.getElementById('loginOverlay').style.display = 'none';
       document.getElementById('userInfo').innerText = '登入帳號： ' + userEmail;
       fetchData();
-      setInterval(fetchData, 5000);
     }
 
     function fetchData() {
@@ -71,74 +81,79 @@
     }
 
     function updateUI(data) {
-      if (data.userVotes && data.userVotes.length > 0) hasVoted = true;
+      userVotes = data.userVotes || [];
       allPosters = data.posters;
+      currentSelection = null; // 更新畫面時清除目前的選擇
       
-      let generateCards = () => allPosters.map(poster => {
-        let isChecked = (hasVoted && data.userVotes.includes(poster.id)) ? 'checked disabled' : (hasVoted ? 'disabled' : '');
+      let cardsHtml = allPosters.map(poster => {
+        let isVoted = userVotes.includes(poster.id);
+        let cardClass = isVoted ? 'poster-card voted' : 'poster-card';
         return `
-          <div class="poster-card">
+          <div class="${cardClass}" id="card-${poster.id}" onclick="handleCardClick('${poster.id}', ${isVoted})">
             <img src="${poster.imageUrl}" alt="${poster.title}">
             <h3>${poster.title}</h3>
             <p>目前票數：<strong>${poster.votes}</strong> 票</p>
-            <label><input type="checkbox" name="posterVote" value="${poster.id}" ${isChecked} onchange="handleSelectionChange()"> 選擇</label>
           </div>
         `;
       }).join('');
 
-      document.getElementById('posterTrack').innerHTML = generateCards() + generateCards();
-      
-      if (hasVoted) {
-        document.getElementById('submitBtn').style.display = 'none';
-        document.getElementById('selectionCount').innerText = '已完成投票';
+      document.getElementById('posterTrack').innerHTML = cardsHtml;
+      updateFooterState();
+    }
+
+    function handleCardClick(posterId, isVoted) {
+      // 1. 如果 3 票已經投完
+      if (userVotes.length >= 3) {
+        alert('您的 3 次投票機會已經用完囉！'); return;
+      }
+      // 2. 如果這張已經投過
+      if (isVoted) return;
+
+      // 3. 點擊邏輯
+      if (currentSelection === posterId) {
+        // 再次點擊自己：取消選取
+        currentSelection = null;
+        document.getElementById(`card-${posterId}`).classList.remove('selected');
+      } else if (currentSelection !== null) {
+        // 已經選了別張，又點新的一張：防呆提示
+        alert('一次只能選一個投！請先再次點擊取消目前的選擇。');
       } else {
-        updateSelectionCount();
+        // 正常選取
+        currentSelection = posterId;
+        document.getElementById(`card-${posterId}`).classList.add('selected');
       }
+      
+      updateFooterState();
     }
 
-    function handleSelectionChange() {
-      if (document.querySelectorAll('input[name="posterVote"]:checked').length > 3) {
-        alert('一個人只能投 3 票！');
-        event.target.checked = false;
+    function updateFooterState() {
+      document.getElementById('selectionCount').innerText = `已投票：${userVotes.length} / 3 票`;
+      const submitBtn = document.getElementById('submitBtn');
+      
+      if (userVotes.length >= 3) {
+        submitBtn.style.display = 'none';
+        document.getElementById('selectionCount').innerText = '已完成 3 票投票！感謝參與。';
+      } else {
+        submitBtn.style.display = 'inline-block';
+        submitBtn.disabled = (currentSelection === null); // 有選取東西時按鈕才會亮起
       }
-      updateSelectionCount();
-    }
-
-    function updateSelectionCount() {
-      if (hasVoted) return;
-      const allCheckboxes = document.querySelectorAll('input[name="posterVote"]');
-      let count = 0;
-      for(let i = 0; i < allCheckboxes.length / 2; i++) {
-        if(allCheckboxes[i].checked) count++;
-      }
-      document.getElementById('selectionCount').innerText = `已選擇：${count} / 3 票`;
-      document.getElementById('submitBtn').disabled = (count !== 3);
     }
 
     function submitVote() {
-      const allCheckboxes = document.querySelectorAll('input[name="posterVote"]');
-      let selectedIds = [];
-      for(let i = 0; i < allCheckboxes.length / 2; i++) {
-        if(allCheckboxes[i].checked) selectedIds.push(allCheckboxes[i].value);
-      }
-
-      if (selectedIds.length !== 3 || new Set(selectedIds).size !== 3) {
-        alert('請確實選擇 3 張不同的海報！'); return;
-      }
-      if (!confirm('投票送出後將無法修改，確定要送出嗎？')) return;
+      if (!currentSelection) return;
+      if (!confirm('確定要將票投給這張海報嗎？送出後無法收回喔！')) return;
 
       document.getElementById('submitBtn').disabled = true;
 
       fetch(API_URL, {
         method: 'POST',
-        body: JSON.stringify({ email: userEmail, votes: selectedIds })
+        body: JSON.stringify({ email: userEmail, vote: currentSelection })
       })
       .then(res => res.json())
       .then(response => {
         alert(response.message);
         if (response.success) {
-          hasVoted = true;
-          fetchData();
+          fetchData(); // 重新抓取資料，會自動將剛剛投的海報轉為「已投票」狀態
         } else {
           document.getElementById('submitBtn').disabled = false;
         }
