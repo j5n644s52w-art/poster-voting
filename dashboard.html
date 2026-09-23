@@ -2,79 +2,233 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>現場即時戰況與活動資訊</title>
+  <title>🏆 現場即時戰況 🏆</title>
   <style>
-    body { font-family: sans-serif; background: #1a1a1a; color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-    h1 { color: #fbbc05; font-size: 2.5em; margin-bottom: 10px; }
-    .info-board { background: #333; padding: 15px 30px; border-radius: 8px; margin-bottom: 30px; text-align: center; font-size: 1.2em; border: 1px solid #555; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background: radial-gradient(circle at top, #2b2b2b, #111); /* 漸層暗色背景 */
+      color: #fff; 
+      margin: 0; 
+      padding: 20px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      overflow-x: hidden;
+    }
     
-    .leaderboard { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; max-width: 1200px; }
-    .card { background: #222; border-radius: 10px; padding: 15px; width: 250px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); position: relative; border: 2px solid #444; }
+    h1 { color: #fbbc05; font-size: 2.8em; margin-top: 10px; margin-bottom: 5px; text-shadow: 0 0 15px rgba(251, 188, 5, 0.5); }
     
-    /* 前三名特別樣式 */
-    .card:nth-child(1) { border-color: #ffd700; transform: scale(1.1); margin: 0 15px; } /* 金 */
-    .card:nth-child(2) { border-color: #c0c0c0; } /* 銀 */
-    .card:nth-child(3) { border-color: #cd7f32; } /* 銅 */
+    .info-board { 
+      background: rgba(255, 255, 255, 0.1); 
+      padding: 10px 30px; 
+      border-radius: 50px; 
+      margin-bottom: 30px; 
+      text-align: center; 
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(5px);
+    }
+
+    /* === 前三名專區 (Top 3) === */
+    .top3-container { 
+      display: flex; 
+      justify-content: center; 
+      align-items: flex-end; /* 讓卡片底部對齊，凸顯第一名 */
+      gap: 30px; 
+      margin-bottom: 50px; 
+      min-height: 420px;
+    }
     
-    .rank-badge { position: absolute; top: -15px; left: -15px; background: #ea4335; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2em; font-weight: bold; line-height: 40px; }
-    .card img { width: 100%; height: 300px; object-fit: cover; border-radius: 5px; margin-bottom: 10px; }
-    .votes { font-size: 1.8em; color: #34a853; font-weight: bold; margin-top: 10px; }
-    .update-time { position: fixed; bottom: 10px; right: 20px; color: #888; font-size: 0.9em; }
+    .card { 
+      background: #222; 
+      border-radius: 15px; 
+      padding: 15px; 
+      text-align: center; 
+      position: relative;
+      transition: transform 0.3s;
+    }
+    .card img { width: 100%; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+    .card h3 { margin: 10px 0 5px 0; font-size: 1.3em; }
+    .card .votes { font-size: 2em; font-weight: bold; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    
+    .medal-icon { font-size: 3em; position: absolute; top: -25px; left: -25px; z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
+
+    /* 🥇 冠軍 (金) 華麗特效 */
+    .card.gold { 
+      width: 300px; 
+      border: 4px solid #FFD700; 
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 215, 0, 0.2); 
+      transform: translateY(-20px); /* 第一名稍微浮高 */
+      background: linear-gradient(145deg, #3a2e00, #222);
+    }
+    .card.gold img { height: 350px; }
+    .card.gold .votes { color: #FFD700; }
+
+    /* 🥈 亞軍 (銀) 華麗特效 */
+    .card.silver { 
+      width: 250px; 
+      border: 4px solid #E0E0E0; 
+      box-shadow: 0 0 20px rgba(224, 224, 224, 0.4); 
+      background: linear-gradient(145deg, #2a2a2a, #222);
+    }
+    .card.silver img { height: 280px; }
+    .card.silver .votes { color: #E0E0E0; }
+
+    /* 🥉 季軍 (銅) 華麗特效 */
+    .card.bronze { 
+      width: 250px; 
+      border: 4px solid #CD7F32; 
+      box-shadow: 0 0 20px rgba(205, 127, 50, 0.4);
+      background: linear-gradient(145deg, #332010, #222);
+    }
+    .card.bronze img { height: 280px; }
+    .card.bronze .votes { color: #CD7F32; }
+
+    /* === 下排其餘名次 (幻燈片跑馬燈) === */
+    .slider-wrapper {
+      width: 100%;
+      overflow: hidden;
+      padding: 10px 0;
+      position: relative;
+    }
+    /* 左右兩側加上黑色漸層，讓跑馬燈有淡入淡出感 */
+    .slider-wrapper::before, .slider-wrapper::after {
+      content: ""; position: absolute; top: 0; width: 100px; height: 100%; z-index: 2;
+    }
+    .slider-wrapper::before { left: 0; background: linear-gradient(to right, #111, transparent); }
+    .slider-wrapper::after { right: 0; background: linear-gradient(to left, #111, transparent); }
+
+    .marquee-track {
+      display: flex;
+      gap: 20px;
+      width: max-content;
+      animation: scroll 30s linear infinite; /* 30秒跑一圈，可自行調整快慢 */
+    }
+    /* 滑鼠停留在跑馬燈上時會暫停 */
+    .marquee-track:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); } /* 因為資料會複製兩份，跑 50% 剛好完美循環 */
+    }
+
+    .small-card { 
+      background: #333; 
+      border-radius: 10px; 
+      padding: 10px; 
+      width: 180px; 
+      text-align: center; 
+      border: 1px solid #555;
+      position: relative;
+    }
+    .small-card img { width: 100%; height: 180px; object-fit: cover; border-radius: 5px; }
+    .small-card h4 { margin: 8px 0 2px 0; font-size: 1.1em; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .small-card .votes { font-size: 1.2em; color: #4285f4; font-weight: bold; }
+    .rank-badge { position: absolute; top: -10px; left: -10px; background: #666; color: white; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; line-height: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+
+    .update-time { position: fixed; bottom: 10px; right: 20px; color: #666; font-size: 0.9em; }
   </style>
 </head>
 <body>
 
-  <h1> 最佳人氣海報戰況 </h1>
-  
-  <!-- 活動資訊區塊 -->
+  <h1>🏆 最佳人氣海報爭霸戰 🏆</h1>
   <div class="info-board">
-    <p>歡迎來到展場！請使用手機掃描各海報旁的 QR Code 進行投票。</p>
-    <p style="color: #4285f4; font-weight: bold;">每人有 3 票，快為您最喜歡的作品應援！</p>
+    <span style="color: #4285f4; font-weight: bold; font-size: 1.2em;">🔥 掃描海報旁 QR Code，投下您神聖的一票！每人最多 3 票 🔥</span>
   </div>
 
-  <div class="leaderboard" id="board">
-    <h2>戰況載入中...</h2>
+  <!-- 前三名專區 -->
+  <div class="top3-container" id="top3Board">
+    <h2 style="color: #888;">戰況載入中...</h2>
+  </div>
+
+  <!-- 第四名之後的跑馬燈專區 -->
+  <div class="slider-wrapper" id="sliderWrapper" style="display: none;">
+    <div class="marquee-track" id="othersBoard"></div>
   </div>
 
   <div class="update-time" id="lastUpdate"></div>
 
   <script>
     // ★★★ 貼上您原本的 GAS 網址 ★★★
-    const API_URL = "https://script.google.com/macros/s/AKfycbynxfHFYTm-o7tthRcKJ-FbuUyWMDWrUg3necNfFgZl9j8z_IOPf-zlqucYhcNobkCmpg/exec";
+    const API_URL = "https://script.google.com/macros/s/您的部署ID/exec";
+    
+    // 用來記錄上一次的資料，避免沒有新投票時畫面一直閃爍或打斷跑馬燈
+    let lastDataString = ""; 
 
     function fetchLiveStats() {
       fetch(API_URL)
         .then(res => res.json())
         .then(data => {
-          // 將海報依照票數由高到低排序
+          // 依照票數排序 (票數一樣則保持原順序)
           let sortedPosters = data.posters.sort((a, b) => b.votes - a.votes);
           
-          let html = '';
-          sortedPosters.forEach((poster, index) => {
-            html += `
-              <div class="card">
-                <div class="rank-badge">${index + 1}</div>
-                <img src="${poster.imageUrl}" alt="${poster.title}">
-                <h3>${poster.title}</h3>
-                <div class="votes">${poster.votes} 票</div>
-              </div>
-            `;
-          });
+          // 防護機制：如果票數跟排名跟上一次檢查一模一樣，就不更新畫面，避免跑馬燈重新開始
+          let currentDataString = JSON.stringify(sortedPosters);
+          if (currentDataString === lastDataString) {
+            updateClockOnly();
+            return; 
+          }
+          lastDataString = currentDataString; // 更新紀錄
+
+          // 分出前三名 與 其他名次
+          let top3 = sortedPosters.slice(0, 3);
+          let others = sortedPosters.slice(3);
+
+          // === 繪製前三名 ===
+          // 為了視覺平衡，我們在畫面上將順序排成：亞軍(左) - 冠軍(中) - 季軍(右)
+          let top3Html = '';
+          if(top3.length >= 2) top3Html += createTopCard(top3[1], 'silver', '🥈');
+          if(top3.length >= 1) top3Html += createTopCard(top3[0], 'gold', '🥇');
+          if(top3.length >= 3) top3Html += createTopCard(top3[2], 'bronze', '🥉');
+          document.getElementById('top3Board').innerHTML = top3Html;
+
+          // === 繪製其餘名次 (幻燈片) ===
+          if (others.length > 0) {
+            document.getElementById('sliderWrapper').style.display = 'block';
+            let othersHtml = '';
+            others.forEach((poster, index) => {
+              othersHtml += `
+                <div class="small-card">
+                  <div class="rank-badge">${index + 4}</div>
+                  <img src="${poster.imageUrl}" alt="${poster.title}">
+                  <h4>${poster.title}</h4>
+                  <div class="votes">${poster.votes} 票</div>
+                </div>
+              `;
+            });
+            // 為了讓跑馬燈能無限無縫輪播，我們把 HTML 複製一次接在後面
+            document.getElementById('othersBoard').innerHTML = othersHtml + othersHtml;
+          } else {
+            document.getElementById('sliderWrapper').style.display = 'none';
+          }
           
-          document.getElementById('board').innerHTML = html;
-          
-          // 更新最後抓取時間
-          let now = new Date();
-          document.getElementById('lastUpdate').innerText = `最後更新時間：${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+          updateClockOnly();
         })
         .catch(err => console.error("抓取失敗", err));
+    }
+
+    function createTopCard(poster, rankClass, medal) {
+      return `
+        <div class="card ${rankClass}">
+          <div class="medal-icon">${medal}</div>
+          <img src="${poster.imageUrl}" alt="${poster.title}">
+          <h3>${poster.title}</h3>
+          <div class="votes">${poster.votes} 票</div>
+        </div>
+      `;
+    }
+
+    function updateClockOnly() {
+      let now = new Date();
+      document.getElementById('lastUpdate').innerText = `連線狀態：即時更新中... (最後檢查 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')})`;
     }
 
     // 網頁開啟時先抓取一次
     fetchLiveStats();
 
-    // 設定定時器：每 50,00 毫秒 (5 秒) 自動在背景重新抓取一次資料
-    setInterval(fetchLiveStats, 5000);
+    // 每 10 秒自動在背景檢查一次資料
+    setInterval(fetchLiveStats, 10000);
   </script>
 </body>
 </html>
