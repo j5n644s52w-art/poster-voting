@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title> 現場即時戰況 </title>
+  <title>🏆 現場即時戰況 🏆</title>
   <style>
     * { box-sizing: border-box; }
     body { 
@@ -10,13 +10,13 @@
       background: radial-gradient(circle at top, #2b2b2b, #111); 
       color: #fff; 
       margin: 0; 
-      padding: 1.5vh 2vw; 
+      padding: 2vh 2vw; 
       height: 100vh; 
       overflow: hidden; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
-      position: relative; /* 為了讓 QR Code 絕對定位在右上角 */
+      position: relative; 
     }
     
     /* === 右上角 QR Code 專區 === */
@@ -25,7 +25,7 @@
       top: 2vh;
       right: 2vw;
       background: rgba(255, 255, 255, 0.95);
-      padding: 1vh;
+      padding: 1.5vh;
       border-radius: 12px;
       text-align: center;
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
@@ -33,108 +33,112 @@
       transition: transform 0.3s;
     }
     .qr-container:hover {
-      transform: scale(1.05); /* 滑鼠滑過稍微放大 */
+      transform: scale(1.05);
     }
     .qr-container img {
-      width: 9vw; /* 根據螢幕寬度自動縮放 */
-      min-width: 100px;
-      max-width: 140px;
+      width: 10vw; 
+      min-width: 120px;
+      max-width: 160px;
       height: auto;
       border-radius: 8px;
     }
     .qr-container p {
-      margin: 0.5vh 0 0 0;
+      margin: 1vh 0 0 0;
       color: #111;
-      font-size: 1.6vh;
+      font-size: 1.8vh;
       font-weight: bold;
       letter-spacing: 1px;
     }
 
     /* === 標題與資訊區 === */
-    h1 { color: #fbbc05; font-size: 3.5vh; margin: 0 0 1vh 0; text-shadow: 0 0 15px rgba(251, 188, 5, 0.5); }
+    h1 { color: #fbbc05; font-size: 4vh; margin: 0 0 1.5vh 0; text-shadow: 0 0 15px rgba(251, 188, 5, 0.5); }
     
     .info-board { 
       background: rgba(255, 255, 255, 0.1); 
-      padding: 1vh 3vw; 
+      padding: 1.5vh 3vw; 
       border-radius: 50px; 
-      margin-bottom: 1.5vh; 
+      margin-bottom: 2vh; 
       text-align: center; 
       border: 1px solid rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(5px);
     }
-    .info-board span { font-size: 1.8vh; color: #4285f4; font-weight: bold; }
+    .info-board span { font-size: 2.2vh; color: #4285f4; font-weight: bold; }
 
-    /* === 前三名專區 === */
+    /* === 前三名專區 (大幅放大並置中靠下) === */
     .top3-container { 
       flex: 1; 
       width: 100%;
       display: flex; 
       justify-content: center; 
-      align-items: flex-end; 
-      gap: 2vw; 
-      margin-bottom: 1.5vh; 
+      align-items: center; /* 改為置中對齊，填補上方空白 */
+      gap: 3vw; 
+      margin-bottom: 2vh; 
+      margin-top: 2vh;
     }
     
     .card { 
       background: #222; 
-      border-radius: 12px; 
-      padding: 1.2vh; 
+      border-radius: 16px; 
+      padding: 1.5vh; 
       text-align: center; 
       position: relative;
       transition: transform 0.3s;
     }
-    .card h3 { margin: 1vh 0 0.5vh 0; font-size: 1.8vh; }
-    .card .votes { font-size: 2.8vh; font-weight: bold; margin-top: 0.5vh; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-    .medal-icon { font-size: 4vh; position: absolute; top: -2vh; left: -1.5vw; z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
+    .card h3 { margin: 1.5vh 0 0.5vh 0; font-size: 2.2vh; }
+    .card .votes { font-size: 3.5vh; font-weight: bold; margin-top: 0.5vh; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .medal-icon { font-size: 5vh; position: absolute; top: -2.5vh; left: -2vw; z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
 
-    /* 金牌 */
+    /* 金牌 (霸氣放大) */
     .card.gold { 
-      width: 22vw; max-width: 260px; 
-      border: 4px solid #FFD700; 
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.2); 
-      transform: translateY(-2vh); 
+      width: 28vw; max-width: 420px; 
+      border: 5px solid #FFD700; 
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.5), inset 0 0 15px rgba(255, 215, 0, 0.2); 
+      transform: translateY(-3vh); /* 第一名更為突出 */
       background: linear-gradient(145deg, #3a2e00, #222);
+      z-index: 5;
     }
-    .card.gold img { height: 28vh; width: 100%; object-fit: cover; border-radius: 6px; } 
+    .card.gold img { height: 40vh; width: 100%; object-fit: cover; border-radius: 8px; } 
     .card.gold .votes { color: #FFD700; }
 
-    /* 銀牌 */
+    /* 銀牌 (跟著放大) */
     .card.silver { 
-      width: 18vw; max-width: 220px;
-      border: 3px solid #E0E0E0; 
-      box-shadow: 0 0 15px rgba(224, 224, 224, 0.3); 
+      width: 23vw; max-width: 340px;
+      border: 4px solid #E0E0E0; 
+      box-shadow: 0 0 20px rgba(224, 224, 224, 0.3); 
       background: linear-gradient(145deg, #2a2a2a, #222);
+      transform: translateY(2vh);
     }
-    .card.silver img { height: 22vh; width: 100%; object-fit: cover; border-radius: 6px; }
+    .card.silver img { height: 32vh; width: 100%; object-fit: cover; border-radius: 8px; }
     .card.silver .votes { color: #E0E0E0; }
 
-    /* 銅牌 */
+    /* 銅牌 (跟著放大) */
     .card.bronze { 
-      width: 18vw; max-width: 220px;
-      border: 3px solid #CD7F32; 
-      box-shadow: 0 0 15px rgba(205, 127, 50, 0.3);
+      width: 23vw; max-width: 340px;
+      border: 4px solid #CD7F32; 
+      box-shadow: 0 0 20px rgba(205, 127, 50, 0.3);
       background: linear-gradient(145deg, #332010, #222);
+      transform: translateY(2vh);
     }
-    .card.bronze img { height: 22vh; width: 100%; object-fit: cover; border-radius: 6px; }
+    .card.bronze img { height: 32vh; width: 100%; object-fit: cover; border-radius: 8px; }
     .card.bronze .votes { color: #CD7F32; }
 
     /* === 下排其餘名次 === */
     .slider-wrapper {
-      height: 18vh; 
+      height: 22vh; /* 高度稍微增加 */
       width: 100vw;
       overflow: hidden;
-      padding: 1vh 0;
+      padding: 1.5vh 0;
       position: relative;
       flex-shrink: 0; 
     }
     .slider-wrapper::before, .slider-wrapper::after {
-      content: ""; position: absolute; top: 0; width: 5vw; height: 100%; z-index: 2;
+      content: ""; position: absolute; top: 0; width: 6vw; height: 100%; z-index: 2;
     }
     .slider-wrapper::before { left: 0; background: linear-gradient(to right, #111, transparent); }
     .slider-wrapper::after { right: 0; background: linear-gradient(to left, #111, transparent); }
 
     .marquee-track {
-      display: flex; gap: 1.2vw; width: max-content;
+      display: flex; gap: 1.5vw; width: max-content;
       animation: scroll 35s linear infinite; 
     }
     .marquee-track:hover { animation-play-state: paused; }
@@ -145,29 +149,28 @@
     }
 
     .small-card { 
-      background: #333; border-radius: 8px; padding: 0.8vh; 
-      width: 11vw; min-width: 130px; text-align: center; border: 1px solid #555; position: relative;
+      background: #333; border-radius: 10px; padding: 1vh; 
+      width: 13vw; min-width: 160px; text-align: center; border: 1px solid #555; position: relative;
     }
-    .small-card img { width: 100%; height: 9.5vh; object-fit: cover; border-radius: 4px; }
-    .small-card h4 { margin: 0.8vh 0 0.5vh 0; font-size: 1.5vh; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .small-card .votes { font-size: 1.8vh; color: #4285f4; font-weight: bold; }
-    .rank-badge { position: absolute; top: -0.8vh; left: -0.8vh; background: #666; color: white; width: 3vh; height: 3vh; border-radius: 50%; font-weight: bold; font-size: 1.5vh; line-height: 3vh; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+    .small-card img { width: 100%; height: 12vh; object-fit: cover; border-radius: 6px; }
+    .small-card h4 { margin: 1vh 0 0.5vh 0; font-size: 1.8vh; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .small-card .votes { font-size: 2vh; color: #4285f4; font-weight: bold; }
+    .rank-badge { position: absolute; top: -1vh; left: -1vh; background: #666; color: white; width: 3.5vh; height: 3.5vh; border-radius: 50%; font-weight: bold; font-size: 1.8vh; line-height: 3.5vh; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
 
-    .update-time { position: fixed; bottom: 0.5vh; right: 2vw; color: #666; font-size: 1.2vh; z-index: 10; }
+    .update-time { position: fixed; bottom: 0.5vh; right: 2vw; color: #666; font-size: 1.4vh; z-index: 10; }
   </style>
 </head>
 <body>
 
   <!-- 右上角 QR Code -->
   <div class="qr-container">
-    <!-- 這裡直接呼叫免費的 QR Code 產生 API，自動將您的網址轉成圖片 -->
     <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://j5n644s52w-art.github.io/poster-voting/" alt="掃碼投票">
-    <p>趕快手機掃描投票喔~</p>
+    <p>手機掃碼 立即投票</p>
   </div>
 
   <h1> 最佳人氣海報爭霸戰 </h1>
   <div class="info-board">
-    <span> 掃描右上角 QR Code，投下您神聖的一票！每人最多 3 票 </span>
+    <span>掃描右上角 QR Code，替小夥伴們打氣！每人最多 3 票 </span>
   </div>
 
   <div class="top3-container" id="top3Board">
